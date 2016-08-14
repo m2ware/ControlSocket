@@ -9,22 +9,22 @@
 
 Copyright (C) 2016 Jeffrey Moore
 
-Permission is hereby granted, free of charge, to any person obtaining a copy 
-of this software and associated documentation files (the "Software"), to deal 
-in the Software without restriction, including without limitation the rights 
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
-copies of the Software, and to permit persons to whom the Software is 
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in 
+The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
@@ -49,7 +49,6 @@ SOFTWARE.
 #define INBOUND_CONNECTION_LIMIT 20
 #define DEFAULT_BUFFER_SIZE 10000
 
-
 using namespace std;
 
 typedef enum IvySoxState
@@ -62,12 +61,12 @@ class InboundConnection
 {
     public:
 
-    int bufferSize;
-    int socketNumber;
+    const int bufferSize;
+    const int socketNumber;
     struct sockaddr_storage connection;
     socklen_t connectionStructSize;
 
-    InboundConnection();
+    InboundConnection(const int socketNumber, const int bufferSize=DEFAULT_BUFFER_SIZE);
     ~InboundConnection();
     int receive(void *message, ssize_t maxLength);
     int sendFile(string filename);
@@ -77,6 +76,10 @@ class InboundConnection
     unsigned short int getPortNumber();
     void closeConnection();
     string getIpAddress();
+
+    private:
+    InboundConnection();
+
 
 };
 
@@ -121,7 +124,7 @@ class IvySox
     //               struct sockaddr_storage *inbound, 
     //               socklen_t inboundConnectionStructSizeIn);
 
-    string messageToString(char *message, int length);
+    static string messageToString(char *message, int length);
 
 
     private:
@@ -142,12 +145,10 @@ class IvySox
     struct addrinfo hints;
     bool useIpv6;
     //in_addr internetAddress;
-
 };
 
 int charArrayToInt(const char *array);
 void sigPipeHandler(int signalId);
-
 
 #endif
 

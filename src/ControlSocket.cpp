@@ -21,7 +21,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-
 #include "ControlSocket.h"
 #include "Command.h"
 #include "StringHelperFunctions.h"
@@ -29,17 +28,17 @@ SOFTWARE.
 #include <sstream>
 #include <stdlib.h>
 //#include <unistd.h>
-//#include <sys/wait.h>
+#include <sys/wait.h>
 //#include <fcntl.h>
 #include <pthread.h>
 
 using namespace std;
 using namespace tinyxml2;
 
-SocketHandler::SocketHandler(const int socketNumber, const IvySox &ivySox) :
-    socketNumber(socketNumber), ivySox(ivySox)
-{
-}
+SocketHandler::SocketHandler(const int socketNumber,
+                             const map<const string, const Command> &commands) :
+    connection(socketNumber), commands(commands)
+{}
 
 ControlSocket::ControlSocket()
 {
@@ -93,62 +92,176 @@ int ControlSocket::run()
 void ControlSocket::handleInboundRequest()
 {
     // Accept inbound & Log request
-    InboundConnection *connection = new InboundRequest();
-    request->ControlSocketPtr = (void *)this;
-
-    request->socketNumber = ivySox.acceptInbound(&request->inbound);
+    int socketNumber = ivySox.acceptInbound();
+    SocketHandler *handler = new SocketHandler(socketNumber, commands);
 
     // Create a detached thread to handle inbound request
     pthread_t aThread;
     pthread_attr_t threadAttribute;
     pthread_attr_init(&threadAttribute);
     pthread_attr_setdetachstate(&threadAttribute, PTHREAD_CREATE_DETACHED);
-    int result = pthread_create( &aThread, &threadAttribute, threadEntryPoint, (void *) request);
-
+    int result = pthread_create( &aThread, &threadAttribute,
+                                 threadEntryPoint, (void *) handler);
 }
 
-/*
 void *threadEntryPoint(void *requestVoid)
 {
-    InboundRequest *request = (InboundRequest *) requestVoid;
-    ControlSocket *ControlSocket = (ControlSocket *)request->ControlSocketPtr;
-    ControlSocket->threadRequestHandler(request);
-    delete request;
+    SocketHandler *handler = (SocketHandler *) requestVoid;
+    handler->connectAndRun();
+    delete handler;
     pthread_exit(NULL);
-}*/
+}
 
-//  Except for logging, this can be moved to request class
-void ControlSocket::threadRequestHandler(SocketHandler &handler)
+void SocketHandler::connectAndRun()
 {
-    writeLog("Binding inbound connection from " + request->inbound.getIpAddress(), true, low );
+    writeLog("Binding inbound connection from " + connection.getIpAddress(), true, low );
+    shouldQuit=false;
 
-    while (1)
+    while (!shouldQuit)
     {
+        int rxBytes = connection.receive(buffer, INBOUND_BUFFER_SIZE);
+        if (rxBytes > 0) processMessage(rxBytes);
+        if (bufferTail == bufferTail) handleCommandBufferOverrun();
+    }
+}
 
+// Process everything in the message queue so far, executing messages as they appear.
+void SocketHandler::processMessage(const int rxBytes)
+{
+    int bufferHead = bufferTail+rxBytes;
+    for (int i = 0; i < rxBytes; i++)
+    {
+        char c = buffer[i];
+
+        if (c == '"')
+        {
+            if (openQuotes)
+            {
+                addWord();
+                openQuotes=false;
+            } else
+            {
+                openQuotes=true;
+            }
+            continue;
+        }
+        if (!openQuotes)
+        {
+            if (isCarriageReturn(c) || c==';')
+            {
+                addWord();
+                execute();
+                openQuotes=false;
+                currentWord = "";
+                continue;
+            }
+            if (isWhitespace(c))
+            {
+                addWord();
+                continue;
+            }
+        }
+        currentWord += c;
+    }
+}
+
+void SocketHandler::addWord()
+{
+    if (currentWord.length() > 0) words.push_back(currentWord);
+    currentWord = "";
+}
+
+void SocketHandler::execute()
+{
+    if (words.size() == 0) return;
+    writeLog("Executing command:");
+    if (lowerCase(words[0]) == "quit")
+    {
+        // Quit command from client results in closing connection.
+        shouldQuit=true;
+        return;
     }
 
-    request->receivedBytes = request->inbound.receive(request->inboundBuffer, INBOUND_BUFFER_SIZE);
-    request->requestString = ivySox.messageToString(request->inboundBuffer, request->receivedBytes);
-    writeLog(request->requestString, false, high);
-    writeLog("(" + toString(request->receivedBytes) + " bytes)",false, medium);
-    // Parse the request string to get the file or script being requested
-    // request->requestedFile = parseRequest(request->requestString);
-    // request->queryString = extractQueryArgs(request->requestedFile);
-    request->parse(defaultFileName);
+    if (commands.find(words[0]) == commands.end())
+    {
+        writeLog("No action for command " + words[0];
+    } else {
+        int result=forkAndRun();
+        if (result)
+        {
+            int err = errno;
+            cout << "Errno = " << returnValue << "\n";
+        }
+    }
+    words.clear();
+}
 
+int SocketHandler::forkAndRun()
+{
+    int returnValue=0;
+    pid_t processId = fork();
+    if (processId < 0)
+    {
+        perror("Fork");
+        cout << "Could not fork!!!";
+        return -1;
+    } else if (processId > 0)
+    {
+        // Parent process - wait.
+        int waitStatus;
+        waitpid(processId, &waitStatus,0);
+    } else
+    {
+        // Child process - execute
+        // setenv("ENV_VAR", value->c_str(),1);
+        returnValue = commands[words[0]].run(words);
+        commands[words[0]].run(words);
+
+    }
+    return returnValue;
+}
+
+void bufferReset()
+{
+    // Reset buffer state for new command
+    bufferTail = 0;
+    words.clear();
+    currentWord="";
+    inWord = false;
+}
+
+void handleCommandBufferOverrun()
+{
+    writeLog("Overran command buffer!  Flushing...");
+    bufferReset();
 }
 
 void ControlSocket::writeLog(const string &logMessage, const bool timestamp,
-                      const LogLevel msgLogLevel)
+                             const LogLevel msgLogLevel)
+{
+    ControlSocket::writeLog(logMessage, timeStamp, msgLogLevel);
+}
+
+void writeLog(const string &logMessage, const bool timestamp,
+              const LogLevel msgLogLevel)
 {
     // Log level enforcement from configuration
-    if (msgLogLevel > logLevel) return;
+    //if (msgLogLevel > logLevel) return;
 
     //  Time stamp, add string, write to log.
     ostringstream message("");
 
     if (timestamp)
     {
+        addTimestamp(message);
+    }
+    message << logMessage << endl;
+
+    cout << message.str();
+}
+
+void addTimestamp(ostringstream &message)
+{
         time_t currentTime = time(0);
         struct tm *timeStruct = localtime(&currentTime);
 
@@ -160,10 +273,6 @@ void ControlSocket::writeLog(const string &logMessage, const bool timestamp,
         message        << (timeStruct->tm_min) << ":";
         if (timeStruct->tm_sec < 10) message << "0";
         message        << (timeStruct->tm_sec) << "]  ";
-    }
-    message << logMessage << endl;
-
-    cout << message.str();
 }
 
 int ControlSocket::configXml()

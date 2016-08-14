@@ -3,10 +3,8 @@
 
 string upperCase(string input);
 string lowerCase(string input);
-
-void *threadEntryPoint(void *requestVoid);
-
 template <class myType> string toString(myType item);
-
+bool isWhitespace(char c);
+bool isCarriageReturn(char c);
 
 #endif

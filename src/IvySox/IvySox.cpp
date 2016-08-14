@@ -45,9 +45,15 @@ using namespace std;
    ntohl() // net to host long
 */
 
-InboundConnection::InboundConnection()
+InboundConnection::InboundConnection(const int socketNumber,
+                                     const int bufferSize) :
+    socketNumber(socketNumber), bufferSize(bufferSize)
 {
-    bufferSize = DEFAULT_BUFFER_SIZE;
+}
+
+InboundConnection::InboundConnection() :
+    InboundConnection(-1);
+{
 }
 
 void sigPipeHandler(int signalId)
@@ -65,9 +71,6 @@ IvySox::IvySox()
     addressInfoResults = NULL;
     socketNumber = -1;
     inboundConnectionLimit = INBOUND_CONNECTION_LIMIT;
-    //socketNumber = socket(PF_INET, SOCK_STREAM, getprotobyname("tcp"));
-    //socketAddress = (struct sockaddr *) malloc(sizeof(struct sockaddr));
-    //iSocketAddress = (struct sockaddr_in *) malloc(sizeof(struct sockaddr_in));
     signal(SIGPIPE, sigPipeHandler );
 }
 
@@ -321,7 +324,7 @@ int InboundConnection::receive(void *message, ssize_t maxLength)
 }
 
 //  ToDo: This should really be static
-string IvySox::messageToString(char *message, int length)
+static string IvySox::messageToString(char *message, int length)
 {
     string str="";
     ostringstream stringStream(str);
@@ -344,7 +347,7 @@ int InboundConnection::sendMessage(void *message, ssize_t length)
     while (totalBytes < length)
     {
         ssize_t txBytes = sendPartial( (void *)((ssize_t)message + totalBytes), length-totalBytes );
-        if (txBytes < 0) 
+        if (txBytes < 0)
         {
             cout << "??TXN??" << endl;
             perror("sendMessage");
@@ -363,7 +366,7 @@ int IvySox::sendMessage(void *message, ssize_t length)
     while (totalBytes < length)
     {
         ssize_t txBytes = sendPartial( (void *)((ssize_t)message + totalBytes), length-totalBytes );
-        if (txBytes < 0) 
+        if (txBytes < 0)
         {
             perror("sendMessage");
             break;

@@ -1,8 +1,7 @@
 #include "Command.h"
-//#include <stdlib.h>
 #include <iostream>
+#include <sstream>
 #include <unistd.h>
-#include <sys/wait.h>
 
 using namespace std;
 
@@ -47,50 +46,21 @@ void Command::addArgument(const Argument &arg)
 
 int Command::run(const vector<string> &bindings)
 {
-    pid_t processId = fork();
-    int returnValue = 0;
-    if (processId < 0)
+    const char **args = new const char *[arguments.size()+2];
+    args[0] = binary.c_str();
+    int idx = 1;
+    // We're making use of the sorting property of the map by
+    // specified from the XML config.  We use an indexing int
+    // so order needn't be zero-based or sequential.
+    for (map<int, Argument>::iterator it = arguments.begin();
+         it != arguments.end(); ++it)
     {
-        perror("Fork");
-        cout << "Could not fork!!";
-        return -1;
-    } else if (processId > 0) {
-        // Parent process - wait.
-        int waitStatus;
-        waitpid(processId, &waitStatus, 0);
-    } else {
-        // Child process - set environment vars and exec command.
-        //setenv("QUERY_STRING", request->queryString.c_str(), 1);
-        const char * args[arguments.size()+1];
-        int idx = 0;
-        // We're making use of the sorting property of the map by
-        // specified from the XML config.  We use an indexing int
-        // so order needn't be zero-based or sequential.
-        for (map<int, Argument>::iterator it = arguments.begin();
-             it != arguments.end(); ++it)
-        {
-            args[idx] = it->second.getString(bindings).c_str();
-            idx++;
-        }
-        args[arguments.size()]=0; // Null terminate
-
-        // Change to execv for vectorized
-        returnValue = execv(binary.c_str(), args);
-        if (returnValue)
-        {
-            int err = errno;
-            cout << "Errno = " << returnValue << "\n";
-        }
-        _exit(0);
+        args[idx] = it->second.getString(bindings).c_str();
+        idx++;
     }
+    args[arguments.size()]=0; // Null terminate
 
-    // TODO: Move this to the caller
-    // Parent process picks up here following execution
-    //if (returnValue != 0)
-    //{
-    //    ivySox.sendMessage("xxx\n");
-    //} else {
-    //    ivySox.sendMessage(":-)\n");
-    //}
+    int returnValue = execv(binary.c_str(), args);
+    delete(args);
     return returnValue;
 }

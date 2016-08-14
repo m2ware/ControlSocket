@@ -41,8 +41,8 @@ SOFTWARE.
 
 #define CONTROL_SOCKET_CONFIG "config.xml"
 #define DEFAULT_PORT_NUMBER 8088
-#define INBOUND_BUFFER_SIZE 1000
-#define OUTBOUND_BUFFER_SIZE 1000
+#define INBOUND_BUFFER_SIZE 10000
+#define OUTBOUND_BUFFER_SIZE 10000
 
 using namespace std;
 using namespace tinyxml2;
@@ -60,16 +60,26 @@ class SocketHandler
 {
     public:
 
-    SocketHandler(const int socketNumber, const IvySox &ivySox,
+    SocketHandler(const int socketNumber,
                   const map<const string, const Command> &commands);
+    void connectAndRun();
 
     private:
 
-    const int socketNumber;
-    const IvySox &ivySox;
-    const map<const string, const Command> commands;
+    const InboundConnection connection;
+    const map<const string, const Command> &commands;
     char buffer[INBOUND_BUFFER_SIZE];
-
+    int bufferTail = 0;
+    string currentWord;
+    vector<string> words;
+    bool shouldQuit=false;
+    bool openQuotes=false;
+    void execute();
+    void bufferReset();
+    void processMessage(const int rxBytes);
+    void addWord();
+    void handleCommandBufferOverrun();
+    int forkAndRun();
     SocketHandler();
 
 };
@@ -90,8 +100,6 @@ class ControlSocket
     void InitDefaults();
     int configXml();
     void handleInboundRequest();
-    void writeLog(const string &logMessage, const bool timestamp,
-                  const LogLevel msgLogLevel);
     int portNumber;
     LogLevel logLevel=high;
     string configFileName;
@@ -104,5 +112,10 @@ class ControlSocket
     unsigned int threadIndex;
 };
 
+void *threadEntryPoint(void *requestVoid);
+
+void writeLog(const string &logMessage, const bool timestamp=true,
+              const LogLevel msgLogLevel = low);
+void addTimestamp(ostringstream &message);
 
 #endif

@@ -20,3 +20,14 @@ string lowerCase(string input)
           *it = tolower(*it);
     return input;
 }
+
+bool isWhitespace(char c)
+{
+    return ( c == ' ' || c == '\t' || c == '\r' ||
+             c == '\v' || c == '\f' );
+}
+
+bool isCarriageReturn(char c)
+{
+    return ( c== '\r' || c == '\n' );
+}
