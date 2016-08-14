@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<!-- Configuration settings for Control Socket -->
+<Configuration>
+    <PortNumber value="8088" />
+</Configuration>
+<!-- Command List
+<Commands>
+    <Command keyword="gpio_pwm" binary="gpio_pwm">
+        <arg order=1 bindOrder=1 name="PinNumber" argString="" />
+        <arg order=2 bindOrder=2 name="PulseRateHz" argString="" />
+        <arg order=3 bindOrder=3 name="PulseCount" argString="" />
+        <arg order=4 bindOrder=4 name="DutyCycle" argString="" />
+    </Command>
+    
+    <Command keyword="echo_test" binary="/bin/bash">
+        <arg order=1 bindOrder=1 name="FirstString" argString="FirstString=" />
+        <arg order=2 bindOrder=2 name="SecondString" argString="SecondString" />
+    </Command>
+
+</Commands>
