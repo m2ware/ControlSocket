@@ -124,7 +124,7 @@ class IvySox
     //               struct sockaddr_storage *inbound, 
     //               socklen_t inboundConnectionStructSizeIn);
 
-    static string messageToString(char *message, int length);
+    static string messageToString(const char *message, const int length);
 
 
     private:

@@ -1,11 +1,6 @@
 #include "StringHelperFunctions.h"
 
-template <class myType> string toString(myType item)
-{
-    ostringstream oss;
-    oss << item;
-    return (oss.str());
-}
+using namespace std;
 
 string upperCase(string input)
 {

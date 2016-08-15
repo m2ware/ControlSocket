@@ -2,7 +2,7 @@
 
 <!-- Configuration settings for Control Socket -->
 <Configuration>
-    <PortNumber value="8088" />
+    <PortNumber value="8089" />
 </Configuration>
 <!-- Command List
 <Commands>

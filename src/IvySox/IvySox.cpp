@@ -52,7 +52,7 @@ InboundConnection::InboundConnection(const int socketNumber,
 }
 
 InboundConnection::InboundConnection() :
-    InboundConnection(-1);
+    InboundConnection(-1)
 {
 }
 
@@ -303,6 +303,7 @@ int IvySox::acceptInbound()
     return inboundSocketNumber;
 }
 
+/*
 int IvySox::acceptInbound(InboundConnection *inbound)
 {
     inbound->connectionStructSize = sizeof inbound->connection;
@@ -310,7 +311,7 @@ int IvySox::acceptInbound(InboundConnection *inbound)
                                   ( struct sockaddr *)&(inbound->connection),
                                     &(inbound->connectionStructSize) );
     return inbound->socketNumber;
-}
+} */
 
 //  ToDo: remove this in favor of connection-based
 int IvySox::receiveInbound(void *message, ssize_t maxLength)
@@ -323,8 +324,7 @@ int InboundConnection::receive(void *message, ssize_t maxLength)
     return( recv( socketNumber, message, maxLength, 0) );
 }
 
-//  ToDo: This should really be static
-static string IvySox::messageToString(char *message, int length)
+string IvySox::messageToString(const char *message, const int length)
 {
     string str="";
     ostringstream stringStream(str);

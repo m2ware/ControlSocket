@@ -25,7 +25,10 @@ SOFTWARE.
 #include "Command.h"
 #include "StringHelperFunctions.h"
 #include <ctime>
+//#include <sstream>
 #include <sstream>
+#include <string>
+#include <iostream>
 #include <stdlib.h>
 //#include <unistd.h>
 #include <sys/wait.h>
@@ -121,7 +124,6 @@ void SocketHandler::connectAndRun()
     {
         int rxBytes = connection.receive(buffer, INBOUND_BUFFER_SIZE);
         if (rxBytes > 0) processMessage(rxBytes);
-        if (bufferTail == bufferTail) handleCommandBufferOverrun();
     }
 }
 
@@ -182,15 +184,15 @@ void SocketHandler::execute()
         return;
     }
 
-    if (commands.find(words[0]) == commands.end())
+    if ( commands.find(words[0]) == commands.end() )
     {
-        writeLog("No action for command " + words[0];
+        writeLog("No action for command " + words[0]);
     } else {
         int result=forkAndRun();
         if (result)
         {
             int err = errno;
-            cout << "Errno = " << returnValue << "\n";
+            cout << "Errno = " << result << "\n";
         }
     }
     words.clear();
@@ -214,32 +216,23 @@ int SocketHandler::forkAndRun()
     {
         // Child process - execute
         // setenv("ENV_VAR", value->c_str(),1);
-        returnValue = commands[words[0]].run(words);
-        commands[words[0]].run(words);
-
+        returnValue = commands.find(words[0])->second.run(words);
     }
     return returnValue;
 }
 
-void bufferReset()
+void SocketHandler::bufferReset()
 {
     // Reset buffer state for new command
     bufferTail = 0;
     words.clear();
     currentWord="";
-    inWord = false;
 }
 
-void handleCommandBufferOverrun()
+void SocketHandler::handleCommandBufferOverrun()
 {
     writeLog("Overran command buffer!  Flushing...");
     bufferReset();
-}
-
-void ControlSocket::writeLog(const string &logMessage, const bool timestamp,
-                             const LogLevel msgLogLevel)
-{
-    ControlSocket::writeLog(logMessage, timeStamp, msgLogLevel);
 }
 
 void writeLog(const string &logMessage, const bool timestamp,
@@ -290,9 +283,10 @@ int ControlSocket::configXml()
         return -1;
     }
 
-    XMLElement *configElement = root->FirstChildElement("Configuration");
+    XMLElement *parserElement = root->FirstChildElement("Configuration");
     if (parserElement != NULL)
     {
+        writeLog("Found config block.");
         XMLElement *configElement = parserElement->FirstChildElement();
         while (configElement != NULL)
         {
@@ -300,12 +294,16 @@ int ControlSocket::configXml()
             string value = configElement->Attribute("value");
             writeLog(settingName + " = " + value,false, low);
             if ( settingName == "PortNumber")
+            {
                 portNumber = configElement->IntAttribute("value");
+                writeLog("PortNumber = " + portNumber);
+            }
             configElement = configElement->NextSiblingElement();
+        }
     }
 
     //  Configuration Options
-    XMLElement *parserElement = root->FirstChildElement("Commands");
+    parserElement = root->FirstChildElement("Commands");
     if (parserElement != NULL)
     {
         XMLElement *configElement = parserElement->FirstChildElement("Command");
@@ -324,16 +322,14 @@ int ControlSocket::configXml()
                 int bindOrder = -1;
                 bool bind=false;
                 error = argElement->QueryIntAttribute("bindOrder", &bindOrder);
-                if (error == XML_NO_ERROR)
-                {
-                    bind=true;
-                }
+                if (error == XML_NO_ERROR) bind=true;
                 string argName = argElement->Attribute("name");
                 string argString = argElement->Attribute("argString");
                 Argument arg(argName, argString, order, bind, bindOrder);
                 command.addArgument(arg);
             }
-            commands[keyword]=command;
+            commands.insert(std::pair<const string, const Command>(keyword,command));
+            writeLog("Added command [" + keyword + "]");
             configElement = configElement->NextSiblingElement("Command");
         }
     }

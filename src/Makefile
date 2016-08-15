@@ -10,7 +10,7 @@ CC	= 	g++-4.7
 INCLUDE	= 	-I'tinyxml' -I'IvySox'
 #FLAGS	= 	$(DEBUG) $(INCLUDE) -g -pthread -std=c++0x -Wall
 FLAGS	=	$(DEBUG) $(INCLUDE) -g -pthread -std=c++11 -fpermissive
-SOURCE	= 	main.cpp Command.cpp ControlSocket.cpp StringHelperFunctions.cpp IvySox/IvySox.cpp ../tinyxml/tinyxml2.cpp
+SOURCE	= 	main.cpp Command.cpp ControlSocket.cpp StringHelperFunctions.cpp IvySox/IvySox.cpp tinyxml/tinyxml2.cpp
 OBJ 	=	$(SOURCE:.cpp=.o)
 LIBS	=	-lpthread
 
