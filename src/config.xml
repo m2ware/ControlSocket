@@ -8,15 +8,17 @@
 </Configuration>
 
 <Commands>
-    <Command keyword="gpio_pwm" binary="gpio_pwm">
+    <Command keyword="gpio_pwm" binary="gpio_pwm" echo="false">
         <arg order="1" bindOrder="1" name="PinNumber" argString="" />
         <arg order="2" bindOrder="2" name="PulseRateHz" argString="" />
         <arg order="3" bindOrder="3" name="PulseCount" argString="" />
         <arg order="4" bindOrder="4" name="DutyCycle" argString="" />
     </Command>
-    <Command keyword="echo_test" binary="/bin/bash">
-        <arg order="1" name="echo" argString="echo" />
-        <arg order="2" bindOrder="1" name="FirstString" argString="" />
+    <Command keyword="echo" binary="/bin/echo" echo="true">
+        <arg order="1" bindOrder="1" name="FirstString" argString="" />
+    </Command>
+    <Command keyword="ls" binary="ls">
+        <arg order="1" bindOrder="1" name="Flags" argString="" echo="true"/>
     </Command>
 </Commands>
 

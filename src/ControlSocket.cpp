@@ -38,10 +38,10 @@ SOFTWARE.
 using namespace std;
 using namespace tinyxml2;
 
-SocketHandler::SocketHandler(const int socketNumber,
-                             const map<const string, const Command> &commands) :
-    connection(socketNumber), commands(commands)
-{}
+SocketHandler::SocketHandler(const map<const string, const Command> &commands) :
+    connection(), commands(commands)
+{
+}
 
 ControlSocket::ControlSocket()
 {
@@ -88,16 +88,18 @@ int ControlSocket::run()
     while (1)
     {
         // Listen for requests
-        handleInboundRequest();
+        listen();
     }
 }
 
-void ControlSocket::handleInboundRequest()
+void ControlSocket::listen()
 {
     // Accept inbound & Log request
-    writeLog("HandleInboundRequest()");
-    int socketNumber = ivySox.acceptInbound();
-    SocketHandler *handler = new SocketHandler(socketNumber, commands);
+    writeLog("[HandleInboundRequest]");
+    //SocketHandler *handler = new SocketHandler(socketNumber, commands);
+    //int socketNumber = ivySox.acceptInbound();
+    SocketHandler *handler = new SocketHandler(commands);
+    ivySox.acceptInbound(handler->getConnection());
 
     // Create a detached thread to handle inbound request
     pthread_t aThread;
@@ -106,6 +108,11 @@ void ControlSocket::handleInboundRequest()
     pthread_attr_setdetachstate(&threadAttribute, PTHREAD_CREATE_DETACHED);
     int result = pthread_create( &aThread, &threadAttribute,
                                  threadEntryPoint, (void *) handler);
+}
+
+InboundConnection &SocketHandler::getConnection()
+{
+    return connection;
 }
 
 void *threadEntryPoint(void *requestVoid)
@@ -195,13 +202,20 @@ void SocketHandler::execute()
 
     if ( commands.find(words[0]) == commands.end() )
     {
+        string msg = "NO OP\n";
         writeLog("No action for command " + words[0]);
+        connection.sendMessage(msg);
     } else {
         int result=forkAndRun();
         if (result)
         {
+            string msg = "ERR " + toString(result) + "\n";
+            connection.sendMessage(msg);
             int err = errno;
-            cout << "Errno = " << result << "\n";
+            cout << "ERR " << result << "\n";
+        } else {
+            string msg = "OK\n";
+            connection.sendMessage(msg);
         }
     }
     words.clear();
@@ -236,12 +250,6 @@ void SocketHandler::bufferReset()
     bufferTail = 0;
     words.clear();
     currentWord="";
-}
-
-void SocketHandler::handleCommandBufferOverrun()
-{
-    writeLog("Overran command buffer!  Flushing...");
-    bufferReset();
 }
 
 void writeLog(const string &logMessage, const bool timestamp,
@@ -313,10 +321,6 @@ int ControlSocket::configXml()
         writeLog("No config block found.");
     }
 
-    parserElement = root->FirstChildElement("Configuration");
-    if (parserElement != NULL) writeLog("Found config twice"); 
-    else writeLog("Second config search no go.");
-
     //  Configuration Options
     parserElement = root->FirstChildElement("Commands");
     if (parserElement != NULL)
@@ -328,7 +332,7 @@ int ControlSocket::configXml()
             string keyword = configElement->Attribute("keyword");
             string binary = configElement->Attribute("binary");
             Command command(keyword, binary);
-            writeLog("Adding command [" + keyword + "]");
+            writeLog("Adding command [" + keyword + "]", false);
 
             XMLElement *argElement = configElement->FirstChildElement("arg");
             while (argElement != NULL)
@@ -345,7 +349,7 @@ int ControlSocket::configXml()
                 string argName = argElement->Attribute("name");
                 string argString = argElement->Attribute("argString");
                 Argument arg(argName, argString, order, bind, bindOrder);
-                writeLog("Adding argument " + argName);
+                writeLog("  ...adding argument " + argName, false);
                 command.addArgument(arg);
                 argElement = argElement->NextSiblingElement("arg");
             }

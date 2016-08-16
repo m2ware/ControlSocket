@@ -62,12 +62,10 @@ class InboundConnection
     public:
 
     const int bufferSize;
-    const int socketNumber;
-    struct sockaddr_storage connection;
-    socklen_t connectionStructSize;
 
-    InboundConnection(const int socketNumber, const int bufferSize=DEFAULT_BUFFER_SIZE);
+    InboundConnection(const int bufferSize=DEFAULT_BUFFER_SIZE);
     ~InboundConnection();
+    //int acceptInbound();
     int receive(void *message, ssize_t maxLength);
     int sendFile(string filename);
     int sendMessage(string message);
@@ -77,9 +75,13 @@ class InboundConnection
     void closeConnection();
     string getIpAddress();
 
-    private:
-    InboundConnection();
+    friend class IvySox;
 
+    private:
+
+    int socketNumber;
+    struct sockaddr_storage connection;
+    socklen_t connectionStructSize;
 
 };
 
@@ -109,6 +111,7 @@ class IvySox
     int openServerOnPort(int portNumber);
     int listenToPort();
     int acceptInbound();
+    int acceptInbound(InboundConnection &inbound);
     //int acceptInbound(IvySox *newSocket);
     int acceptInbound(InboundConnection *inbound);
 

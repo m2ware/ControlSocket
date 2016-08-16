@@ -60,13 +60,13 @@ class SocketHandler
 {
     public:
 
-    SocketHandler(const int socketNumber,
-                  const map<const string, const Command> &commands);
+    SocketHandler(const map<const string, const Command> &commands);
     void connectAndRun();
+    InboundConnection &getConnection();
 
     private:
 
-    const InboundConnection connection;
+    InboundConnection connection;
     const map<const string, const Command> &commands;
     char buffer[INBOUND_BUFFER_SIZE];
     int bufferTail = 0;
@@ -98,7 +98,7 @@ class ControlSocket
     map<const string, const Command> commands;
     void InitDefaults();
     int configXml();
-    void handleInboundRequest();
+    void listen();
     int portNumber;
     LogLevel logLevel=high;
     string configFileName;

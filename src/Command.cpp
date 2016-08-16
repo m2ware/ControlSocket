@@ -17,6 +17,7 @@ Argument::Argument(const Argument &arg) :
 
 string Argument::getString(const vector<string> &bindings)
 {
+    if (bindOrder >= bindings.size()) return "";
     string str = argString;
     if (bind) str += bindings[bindOrder];
     return str;
@@ -30,25 +31,21 @@ Command::Command(const string keyword, const string binary) :
 Command::Command(const Command &cmd) :
     Command(cmd.keyword, cmd.binary)
 {
-    /*
-    for (map<int, Argument>::const_iterator it = cmd.arguments.begin();
-         it != cmd.arguments.end(); it++)
-    {
-        addArgument(it->second);
-    }*/
     arguments.insert(cmd.arguments.begin(), cmd.arguments.end());
 }
 
 void Command::addArgument(const Argument &arg)
 {
-    //arguments[arg.order] = arg;
+    cout << "[" << arg.name << "]";
     arguments.insert(std::pair<int, Argument> (arg.order, arg) );
 }
 
 int Command::run(const vector<string> &bindings)
 {
-    const char **args = new const char *[arguments.size()+2];
+    const char ** args = new const char * [arguments.size()+2];
+    //const char * args[10];
     args[0] = binary.c_str();
+    cout << "[" << args[0] << "]";
     int idx = 1;
     // We're making use of the sorting property of the map by
     // specified from the XML config.  We use an indexing int
@@ -56,14 +53,19 @@ int Command::run(const vector<string> &bindings)
     for (map<int, Argument>::iterator it = arguments.begin();
          it != arguments.end(); ++it)
     {
-        args[idx] = it->second.getString(bindings).c_str();
-        cout << args[idx];
-        idx++;
+        string argString = it->second.getString(bindings);
+        if (argString.length() > 0)
+        {
+            args[idx] = argString.c_str();
+            cout << "[" << args[idx] << "]";
+            idx++;
+        }
     }
-    args[arguments.size()]=0; // Null terminate
-
-    int returnValue = execv(binary.c_str(), args);
+    args[idx] = NULL; // In case we have fewer args than expected.
+    args[arguments.size()+2-1] = NULL; // Null terminate
+    cout << endl << flush;
+    int returnValue = execvp(binary.c_str(), args);
     if (returnValue) perror("Error running command: ");
-    delete(args);
+    delete args;
     return returnValue;
 }

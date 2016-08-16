@@ -45,14 +45,8 @@ using namespace std;
    ntohl() // net to host long
 */
 
-InboundConnection::InboundConnection(const int socketNumber,
-                                     const int bufferSize) :
-    socketNumber(socketNumber), bufferSize(bufferSize)
-{
-}
-
-InboundConnection::InboundConnection() :
-    InboundConnection(-1)
+InboundConnection::InboundConnection(const int bufferSize) :
+    bufferSize(bufferSize)
 {
 }
 
@@ -303,15 +297,24 @@ int IvySox::acceptInbound()
     return inboundSocketNumber;
 }
 
-/*
-int IvySox::acceptInbound(InboundConnection *inbound)
+int IvySox::acceptInbound(InboundConnection &inbound)
 {
-    inbound->connectionStructSize = sizeof inbound->connection;
-    inbound->socketNumber = accept( socketNumber,
-                                  ( struct sockaddr *)&(inbound->connection),
-                                    &(inbound->connectionStructSize) );
-    return inbound->socketNumber;
-} */
+    inbound.connectionStructSize = sizeof inbound.connection;
+    inbound.socketNumber = accept( socketNumber,
+                                  ( struct sockaddr *)&(inbound.connection),
+                                    &(inbound.connectionStructSize) );
+    return inbound.socketNumber;
+}
+
+/*
+int InboundConnection::acceptInbound()
+{
+    connectionStructSize = sizeof(connection);
+    socketNumber = accept(socketNumber,
+                          (struct sockaddr *)&connection,
+                          &connectionStructSize);
+    return socketNumber;
+}*/
 
 //  ToDo: remove this in favor of connection-based
 int IvySox::receiveInbound(void *message, ssize_t maxLength)
@@ -419,7 +422,7 @@ int InboundConnection::sendFile(string filename)
             blockSize = file.gcount();
             totalBytes += (size_t)blockSize;
             int txBytes = sendMessage(dataBuffer, blockSize);
-            if ( txBytes < 0) 
+            if ( txBytes < 0)
             {
                 cout << "Error while sending!!" << endl;
                 break;
