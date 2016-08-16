@@ -2,6 +2,7 @@
 #include <iostream>
 #include <sstream>
 #include <unistd.h>
+#include <stdio.h>
 
 using namespace std;
 
@@ -56,11 +57,13 @@ int Command::run(const vector<string> &bindings)
          it != arguments.end(); ++it)
     {
         args[idx] = it->second.getString(bindings).c_str();
+        cout << args[idx];
         idx++;
     }
     args[arguments.size()]=0; // Null terminate
 
     int returnValue = execv(binary.c_str(), args);
+    if (returnValue) perror("Error running command: ");
     delete(args);
     return returnValue;
 }

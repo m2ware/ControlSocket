@@ -81,7 +81,6 @@ class SocketHandler
     void handleCommandBufferOverrun();
     int forkAndRun();
     SocketHandler();
-
 };
 
 class ControlSocket

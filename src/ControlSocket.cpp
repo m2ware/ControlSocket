@@ -95,6 +95,7 @@ int ControlSocket::run()
 void ControlSocket::handleInboundRequest()
 {
     // Accept inbound & Log request
+    writeLog("HandleInboundRequest()");
     int socketNumber = ivySox.acceptInbound();
     SocketHandler *handler = new SocketHandler(socketNumber, commands);
 
@@ -125,6 +126,8 @@ void SocketHandler::connectAndRun()
         int rxBytes = connection.receive(buffer, INBOUND_BUFFER_SIZE);
         if (rxBytes > 0) processMessage(rxBytes);
     }
+    writeLog("[Quit] command issued by client.");
+    connection.closeConnection();
 }
 
 // Process everything in the message queue so far, executing messages as they appear.
@@ -139,11 +142,15 @@ void SocketHandler::processMessage(const int rxBytes)
         {
             if (openQuotes)
             {
+                // Close quote terminates word
                 addWord();
+                cout << "\" ";
                 openQuotes=false;
             } else
             {
+                // Starts a word
                 openQuotes=true;
+                cout << "\"";
             }
             continue;
         }
@@ -160,6 +167,7 @@ void SocketHandler::processMessage(const int rxBytes)
             if (isWhitespace(c))
             {
                 addWord();
+                cout << " ";
                 continue;
             }
         }
@@ -176,6 +184,7 @@ void SocketHandler::addWord()
 void SocketHandler::execute()
 {
     if (words.size() == 0) return;
+    cout << "\n";
     writeLog("Executing command:");
     if (lowerCase(words[0]) == "quit")
     {
@@ -274,16 +283,17 @@ int ControlSocket::configXml()
     msg += configFileName;
     writeLog(msg);
     config.LoadFile(configFileName.c_str());
-
     //  Pick apart the XML for config options...
-    XMLElement *root = config.RootElement();
+    XMLElement *root = config.FirstChildElement("ControlSocket");
     if ( root == NULL )
     {
         writeLog("Error parsing file - no root element found.", true, error);
         return -1;
     }
 
-    XMLElement *parserElement = root->FirstChildElement("Configuration");
+    XMLElement *parserElement = NULL;
+
+    parserElement = root->FirstChildElement("Configuration");
     if (parserElement != NULL)
     {
         writeLog("Found config block.");
@@ -296,25 +306,31 @@ int ControlSocket::configXml()
             if ( settingName == "PortNumber")
             {
                 portNumber = configElement->IntAttribute("value");
-                writeLog("PortNumber = " + portNumber);
             }
             configElement = configElement->NextSiblingElement();
         }
+    } else {
+        writeLog("No config block found.");
     }
+
+    parserElement = root->FirstChildElement("Configuration");
+    if (parserElement != NULL) writeLog("Found config twice"); 
+    else writeLog("Second config search no go.");
 
     //  Configuration Options
     parserElement = root->FirstChildElement("Commands");
     if (parserElement != NULL)
     {
+        writeLog("Found command block.");
         XMLElement *configElement = parserElement->FirstChildElement("Command");
-
         while (configElement != NULL)
         {
             string keyword = configElement->Attribute("keyword");
             string binary = configElement->Attribute("binary");
             Command command(keyword, binary);
-            XMLElement *argElement = configElement->FirstChildElement("arg");
+            writeLog("Adding command [" + keyword + "]");
 
+            XMLElement *argElement = configElement->FirstChildElement("arg");
             while (argElement != NULL)
             {
                 XMLError error = XML_NO_ERROR;
@@ -322,16 +338,22 @@ int ControlSocket::configXml()
                 int bindOrder = -1;
                 bool bind=false;
                 error = argElement->QueryIntAttribute("bindOrder", &bindOrder);
-                if (error == XML_NO_ERROR) bind=true;
+                if (error == XML_NO_ERROR)
+                {
+                    bind=true;
+                }
                 string argName = argElement->Attribute("name");
                 string argString = argElement->Attribute("argString");
                 Argument arg(argName, argString, order, bind, bindOrder);
+                writeLog("Adding argument " + argName);
                 command.addArgument(arg);
+                argElement = argElement->NextSiblingElement("arg");
             }
             commands.insert(std::pair<const string, const Command>(keyword,command));
-            writeLog("Added command [" + keyword + "]");
             configElement = configElement->NextSiblingElement("Command");
         }
+    } else {
+        writeLog("No command block found.");
     }
     return 0; // Success
 }
