@@ -95,9 +95,6 @@ int ControlSocket::run()
 void ControlSocket::listen()
 {
     // Accept inbound & Log request
-    writeLog("[HandleInboundRequest]");
-    //SocketHandler *handler = new SocketHandler(socketNumber, commands);
-    //int socketNumber = ivySox.acceptInbound();
     SocketHandler *handler = new SocketHandler(commands);
     ivySox.acceptInbound(handler->getConnection());
 
@@ -202,11 +199,12 @@ void SocketHandler::execute()
 
     if ( commands.find(words[0]) == commands.end() )
     {
-        string msg = "NO OP\n";
+        string msg = "NO_OP\n";
         writeLog("No action for command " + words[0]);
         connection.sendMessage(msg);
     } else {
         int result=forkAndRun();
+        //int result = justRun();
         if (result)
         {
             string msg = "ERR " + toString(result) + "\n";
@@ -221,9 +219,15 @@ void SocketHandler::execute()
     words.clear();
 }
 
+int SocketHandler::justRun()
+{
+    return commands.find(words[0])->second.run(words);
+}
+
 int SocketHandler::forkAndRun()
 {
     int returnValue=0;
+    // Why fork???
     pid_t processId = fork();
     if (processId < 0)
     {

@@ -10,7 +10,7 @@
 <Commands>
     <Command keyword="gpio_pwm" binary="gpio_pwm" echo="false">
         <arg order="1" bindOrder="1" name="PinNumber" argString="" />
-        <arg order="2" bindOrder="2" name="PulseRateHz" argString="" />
+        <arg order="2" bindOrder="2" name="PulseTimeUs" argString="" />
         <arg order="3" bindOrder="3" name="PulseCount" argString="" />
         <arg order="4" bindOrder="4" name="DutyCycle" argString="" />
     </Command>
@@ -19,6 +19,15 @@
     </Command>
     <Command keyword="ls" binary="ls">
         <arg order="1" bindOrder="1" name="Flags" argString="" echo="true"/>
+    </Command>
+    <Command keyword="HelloWorld" binary="echo">
+        <arg order="1" name="Dummy" argString="Hello, world!!!" />
+    </Command>
+    <Command keyword="BashTest" binary="/bin/bash">
+        <arg order="1" name="ScriptName" argString="bashTest.sh" />
+        <arg order="2" bindOrder="1" name="arg1" argString=""/>
+        <arg order="3" bindOrder="2" name="arg2" argString=""/>
+        <arg order="4" bindOrder="3" name="arg3" argString=""/>
     </Command>
 </Commands>
 

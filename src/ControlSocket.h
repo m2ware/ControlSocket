@@ -79,6 +79,7 @@ class SocketHandler
     void processMessage(const int rxBytes);
     void addWord();
     void handleCommandBufferOverrun();
+    int justRun();
     int forkAndRun();
     SocketHandler();
 };

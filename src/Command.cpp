@@ -17,6 +17,11 @@ Argument::Argument(const Argument &arg) :
 
 string Argument::getString(const vector<string> &bindings)
 {
+    // Unbound parameters just pass argString
+    if (!bind)
+    {
+        return argString;
+    }
     if (bindOrder >= bindings.size()) return "";
     string str = argString;
     if (bind) str += bindings[bindOrder];
