@@ -3,6 +3,7 @@
 #include <sstream>
 #include <unistd.h>
 #include <stdio.h>
+#include <cstring>
 
 using namespace std;
 
@@ -12,7 +13,6 @@ Argument::Argument(const string name, const string argString, const int order,
 
 Argument::Argument(const Argument &arg) :
     Argument(arg.name, arg.argString, arg.order, arg.bind, arg.bindOrder)
-    //name(arg.name), argString(arg.argString), order(arg.order), bind(arg.bind), bindOrder(arg.bindOrder)
 {}
 
 string Argument::getString(const vector<string> &bindings)
@@ -48,8 +48,16 @@ void Command::addArgument(const Argument &arg)
 int Command::run(const vector<string> &bindings)
 {
     const char ** args = new const char * [arguments.size()+2];
-    //const char * args[10];
-    args[0] = binary.c_str();
+    char **argCopy = new char *[arguments.size()+2];
+    for (int i = 0; i < arguments.size()+2; i++)
+    {
+        argCopy[i] = new char[512];
+    }
+
+    strcpy(argCopy[0], binary.c_str());
+    //args[0] = binary.c_str();
+    args[0] = argCopy[0];
+
     cout << "[" << args[0] << "]";
     int idx = 1;
     // We're making use of the sorting property of the map by
@@ -61,7 +69,10 @@ int Command::run(const vector<string> &bindings)
         string argString = it->second.getString(bindings);
         if (argString.length() > 0)
         {
-            args[idx] = argString.c_str();
+            strcpy(argCopy[idx], argString.c_str());
+            //args[idx] = argString.c_str();
+            args[idx] = argCopy[idx];
+            cout << idx;
             cout << "[" << args[idx] << "]";
             idx++;
         }
@@ -69,8 +80,18 @@ int Command::run(const vector<string> &bindings)
     args[idx] = NULL; // In case we have fewer args than expected.
     args[arguments.size()+2-1] = NULL; // Null terminate
     cout << endl << flush;
+    for (int i = 0; i < arguments.size() + 2; i++)
+    {
+      if ( args[i] == NULL ) continue;
+      cout << "[" << args[i] << "]";
+    }
+    cout << endl << flush;
+    cout << "GO!" << endl << flush;
+
     int returnValue = execvp(binary.c_str(), args);
     if (returnValue) perror("Error running command: ");
-    delete args;
+    cout << "Done" << endl;
+    delete[] args;
+    delete[] argCopy;
     return returnValue;
 }
