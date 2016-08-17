@@ -1,0 +1,28 @@
+gpio_pwm 20 10000 50 15;
+gpio_p2m 21 10000 50 15;
+
+gpio_pwm 20 10000 10 10;
+gpio_pwm 21 10000 10 20;
+gpio_pwm 21 10000 10 15;
+gpio_pwm 20 10000 10 15;
+gpio_pwm 20 10000 10 20;
+gpio_pwm 21 10000 10 10;
+gpio_pwm 20 10000 10 15;
+gpio_pwm 20 10000 10 10;
+gpio_pwm 21 10000 10 15;
+gpio_pwm 21 10000 10 20;
+
+gpio_pwm 20 10000 50 15;
+gpio_p2m 21 10000 50 15;
+
+gpio_pwm 20 10000 10 10;
+gpio_pwm 21 10000 10 20;
+gpio_pwm 21 10000 10 15;
+gpio_pwm 20 10000 10 15;
+gpio_pwm 20 10000 10 20;
+gpio_pwm 21 10000 10 10;
+gpio_pwm 20 10000 10 15;
+gpio_pwm 20 10000 10 10;
+gpio_pwm 21 10000 10 15;
+gpio_pwm 21 10000 10 20;
+

@@ -92,6 +92,10 @@ int Command::run(const vector<string> &bindings)
     if (returnValue) perror("Error running command: ");
     cout << "Done" << endl;
     delete[] args;
+    for (int i = 0; i < arguments.size()+2; i++)
+    {
+        delete [] argCopy[i];
+    }
     delete[] argCopy;
     return returnValue;
 }
