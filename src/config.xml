@@ -29,6 +29,9 @@
         <arg order="3" bindOrder="2" name="arg2" argString=""/>
         <arg order="4" bindOrder="3" name="arg3" argString=""/>
     </Command>
+    <Command keyword="sleep" binary="/bin/sleep">
+        <arg order="1" bindOrder="1" name="SleepTimeSec" argString="" />
+    </Command>
 </Commands>
 
 </ControlSocket>
