@@ -3,7 +3,9 @@ Native code socket listener providing programmable remote control interface for 
 
 Developed for Raspberry Pi, but will work on most BSD/Linux systems.
 
-[NOTE: Still under development, not functioning yet but will be very soon :-) ]
+[NOTE: Now functional and tested.  Still in beta, working out a few kinks.  Please file an issue if it gives you any trouble. ]
+
+Please see the Wiki for detailed setup, configuration, and usage instructions.
 
 This program provides a socket interface with a simple command interface to allow remote control of projects.  A configuration file allows commands to be defined along with binding information for parameters.  When a remote process connects to the listener, it will execute the commands as configured and bind parameters in the message to command line arguments for execution.
 
