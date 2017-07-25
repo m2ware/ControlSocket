@@ -170,7 +170,7 @@ int IvySox::getConnectionInfo( string url, string service)
 int IvySox::connectTo( const char *url, const char *service)
 {
     getConnectionInfo(url, service);
-    int ret = connect(socketNumber, addressInfoResults->ai_addr, 
+    int ret = connect(socketNumber, addressInfoResults->ai_addr,
                       addressInfoResults->ai_addrlen);
     return ret;
 }
@@ -338,7 +338,6 @@ string IvySox::messageToString(const char *message, const int length)
         if (message[i] == 0) continue;
         stringStream << message[i];
     }
-    //stringStream << (char)0;
     str = stringStream.str();
     return str;
 }
@@ -354,11 +353,9 @@ int InboundConnection::sendMessage(void *message, ssize_t length)
         {
             cout << "??TXN??" << endl;
             perror("sendMessage");
-            //break;
             return (-1);
         }
         totalBytes+=txBytes;
-        //cout << txBytes << " ";
     }
     return( totalBytes );
 }
@@ -489,7 +486,7 @@ int IvySox::openServerOnPort(int portNumber)
     setsockopt(socketNumber, SOL_SOCKET, (SO_REUSEPORT | SO_REUSEADDR),
                (char*)&option,sizeof(option));
 #else
-    setsockopt(socketNumber, SOL_SOCKET, SO_REUSEADDR, 
+    setsockopt(socketNumber, SOL_SOCKET, SO_REUSEADDR,
                (char*)&option,sizeof(option));
 #endif
 
