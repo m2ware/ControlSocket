@@ -15,7 +15,7 @@ Argument::Argument(const Argument &arg) :
     Argument(arg.name, arg.argString, arg.order, arg.bind, arg.bindOrder)
 {}
 
-string Argument::getString(const vector<string> &bindings)
+string Argument::getString(const vector<string> &bindings) const
 {
     // Unbound parameters just pass argString
     if (!bind)
@@ -45,9 +45,10 @@ void Command::addArgument(const Argument &arg)
     arguments.insert(std::pair<int, Argument> (arg.order, arg) );
 }
 
-int Command::run(const vector<string> &bindings)
+int Command::run(const vector<string> &bindings) const
 {
-    const char ** args = new const char * [arguments.size()+2];
+    //const char ** args = new const char * [arguments.size()+2];
+    char ** args = new char * [arguments.size()+2];
     char **argCopy = new char *[arguments.size()+2];
     for (int i = 0; i < arguments.size()+2; i++)
     {
@@ -63,7 +64,7 @@ int Command::run(const vector<string> &bindings)
     // We're making use of the sorting property of the map by
     // specified from the XML config.  We use an indexing int
     // so order needn't be zero-based or sequential.
-    for (map<int, Argument>::iterator it = arguments.begin();
+    for (map<int, Argument>::const_iterator it = arguments.begin();
          it != arguments.end(); ++it)
     {
         string argString = it->second.getString(bindings);
@@ -88,6 +89,7 @@ int Command::run(const vector<string> &bindings)
     cout << endl << flush;
     cout << "GO!" << endl << flush;
 
+    //int returnValue = execvp(binary.c_str(), (char * const *)args);
     int returnValue = execvp(binary.c_str(), args);
     if (returnValue) perror("Error running command: ");
     cout << "Done" << endl;

@@ -5,7 +5,8 @@
 #  Makefile for ControlSocket.
 
 DEBUG	= 	-O2
-CC	= 	g++-4.7
+CC	= 	g++
+#CC	= 	g++-4.7
 #CC	= 	gcc
 INCLUDE	= 	-I'tinyxml' -I'IvySox'
 #FLAGS	= 	$(DEBUG) $(INCLUDE) -g -pthread -std=c++0x -Wall
