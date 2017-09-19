@@ -45,20 +45,17 @@ void Command::addArgument(const Argument &arg)
     arguments.insert(std::pair<int, Argument> (arg.order, arg) );
 }
 
-int Command::run(const vector<string> &bindings) const
+char **Command::getArgumentList(const vector<string> &bindings) const
 {
-    //const char ** args = new const char * [arguments.size()+2];
     char ** args = new char * [arguments.size()+2];
-    char **argCopy = new char *[arguments.size()+2];
     for (int i = 0; i < arguments.size()+2; i++)
     {
-        argCopy[i] = new char[512];
+        args[i] = new char[512];
     }
 
-    strcpy(argCopy[0], binary.c_str());
-    //args[0] = binary.c_str();
-    args[0] = argCopy[0];
-
+	// Copy command and arguments into arg array
+    strcpy(args[0], binary.c_str());
+    
     cout << "[" << args[0] << "]";
     int idx = 1;
     // We're making use of the sorting property of the map by
@@ -70,9 +67,9 @@ int Command::run(const vector<string> &bindings) const
         string argString = it->second.getString(bindings);
         if (argString.length() > 0)
         {
-            strcpy(argCopy[idx], argString.c_str());
+            strcpy(args[idx], argString.c_str());
             //args[idx] = argString.c_str();
-            args[idx] = argCopy[idx];
+            //args[idx] = argCopy[idx];
             cout << idx;
             cout << "[" << args[idx] << "]";
             idx++;
@@ -80,6 +77,23 @@ int Command::run(const vector<string> &bindings) const
     }
     args[idx] = NULL; // In case we have fewer args than expected.
     args[arguments.size()+2-1] = NULL; // Null terminate
+    
+    return args;
+}
+
+void Command::cleanupArgumentList(char **args) const
+{
+    for (int i = 0; i < arguments.size()+2; i++)
+    {
+        delete [] args[i];
+    }
+    delete[] args;
+}
+
+int Command::run(const vector<string> &bindings) const
+{
+	// Allocate c-string storage for arguments list
+	char **args = getArgumentList(bindings);
     cout << endl << flush;
     for (int i = 0; i < arguments.size() + 2; i++)
     {
@@ -89,15 +103,10 @@ int Command::run(const vector<string> &bindings) const
     cout << endl << flush;
     cout << "GO!" << endl << flush;
 
-    //int returnValue = execvp(binary.c_str(), (char * const *)args);
+	// Execute command with arguments
     int returnValue = execvp(binary.c_str(), args);
     if (returnValue) perror("Error running command: ");
     cout << "Done" << endl;
-    delete[] args;
-    for (int i = 0; i < arguments.size()+2; i++)
-    {
-        delete [] argCopy[i];
-    }
-    delete[] argCopy;
+    cleanupArgumentList(args);
     return returnValue;
 }

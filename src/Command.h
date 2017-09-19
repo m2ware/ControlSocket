@@ -36,6 +36,8 @@ class Command
     private:
         map<int, Argument> arguments;
         Command();
+        char **getArgumentList(const vector<string> &bindings) const;
+        void cleanupArgumentList(char **args) const;
 };
 
 #endif
