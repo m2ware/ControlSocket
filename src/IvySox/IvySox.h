@@ -7,7 +7,7 @@
 
 [OliWeb and IvySox are provided under the MIT software license]
 
-Copyright (C) 2016 Jeffrey Moore
+Copyright (C) 2017 Jeffrey Moore
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
