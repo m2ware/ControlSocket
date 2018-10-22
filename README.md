@@ -13,10 +13,10 @@ This interface allows for control of projects requiring lower latency or higher 
 
 The client can be any remote program that can connect to the socket and supply simple commands.  The command interface follows a very basic subset of Tcl:
 
--All commands consist of lists of words, which are space-separated
--The first word in a command is the command to be executed, subsequent words are arguments
--Double-quotes can be used for arguments with spaces in them
--Commands are terminated by either semicolons or carriage returns
+- All commands consist of lists of words, which are space-separated
+- The first word in a command is the command to be executed, subsequent words are arguments
+- Double-quotes can be used for arguments with spaces in them
+- Commands are terminated by either semicolons or carriage returns
 
 For example, here's two hypothetical commands:
 
